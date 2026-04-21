@@ -1,0 +1,231 @@
+{
+  "session_id": "881fcff4-4f18-4afe-a7db-f7efdead6eb7",
+  "blueprint": {
+    "id": "40ad919f-6980-421d-b696-cc309d25e0ad",
+    "title": "Acme Apparel AI Pilot: Store-Level Inventory Replenishment & Shrink Detection Across 40 Locations",
+    "industry": "Retail",
+    "status": "draft",
+    "personas": [
+      {
+        "id": "p1",
+        "name": "District Inventory Planner at Acme Apparel (40-store specialty chain)",
+        "description": "Responsible for allocating and balancing stock across all 40 store locations, managing inter-store transfers, and ensuring SKU availability aligns with regional demand patterns.",
+        "goals": [
+          "Minimize lost sales due to stockouts at high-velocity stores",
+          "Reduce overstock at underperforming locations through proactive rebalancing",
+          "Automate inter-store transfer recommendations to cut manual planning time"
+        ],
+        "pain_points": [
+          "Manually reviewing sell-through reports across 40 stores is time-consuming and error-prone",
+          "Transfer requests often arrive too late, after a SKU has already sold through",
+          "No systematic way to identify which donor store has the right size/color depth to fulfill a transfer"
+        ]
+      },
+      {
+        "id": "p2",
+        "name": "Store Operations Manager at Acme Apparel (individual store, high-volume urban location)",
+        "description": "Oversees daily store operations including receiving, floor replenishment, cycle counts, and POS reconciliation for a single high-traffic Acme Apparel location.",
+        "goals": [
+          "Keep floor inventory accurate and fully stocked during peak selling periods",
+          "Identify and escalate shrink incidents before they compound into significant loss",
+          "Reduce time spent on manual cycle count reconciliation"
+        ],
+        "pain_points": [
+          "Shrink is often discovered weeks after the fact during full physical inventory counts",
+          "POS voids and returns anomalies are not flagged in real time",
+          "Cycle count discrepancies are logged in spreadsheets and rarely escalated systematically"
+        ]
+      },
+      {
+        "id": "p3",
+        "name": "Loss Prevention Analyst at Acme Apparel (regional, covering 12 stores)",
+        "description": "Monitors shrink trends, investigates POS anomalies, and coordinates with store managers and LP field agents to identify and resolve theft or process-failure incidents across a regional cluster of stores.",
+        "goals": [
+          "Detect shrink patterns early using POS transaction data and cycle count variances",
+          "Prioritize which stores and SKU categories warrant on-site investigation",
+          "Build evidence-based cases for internal investigations or vendor disputes"
+        ],
+        "pain_points": [
+          "Shrink data from POS and cycle counts lives in separate systems with no unified view",
+          "High volume of transaction data makes manual pattern detection impractical",
+          "Alerts from store managers are inconsistent and often lack supporting data"
+        ]
+      }
+    ],
+    "scenarios": [
+      {
+        "id": "s1",
+        "title": "Real-Time SKU Sell-Through Detection and Automated Inter-Store Replenishment",
+        "description": "A best-selling slim-fit denim SKU in size 32x30 sells through at a downtown flagship store on a Friday afternoon. The AI system detects the stockout risk, identifies donor stores with surplus inventory, calculates optimal transfer quantities, and routes a transfer recommendation to the District Inventory Planner for approval before end of business day.",
+        "actors": [
+          "p1",
+          "p2"
+        ],
+        "steps": [
+          "POS Transaction Monitor Agent detects that on-hand units for SKU #DM-3230-IND have dropped below the store-specific reorder threshold at the flagship location, cross-referencing real-time POS sales velocity against current on-hand inventory from the WMS feed.",
+          "Inventory Rebalancing Agent queries all 39 other store locations for available depth in SKU #DM-3230-IND, filtering for stores within a 50-mile radius with on-hand units exceeding their own 14-day demand forecast by at least 3 units.",
+          "Inventory Rebalancing Agent generates a ranked list of 3 donor store candidates with proposed transfer quantities, estimated transit time, and projected impact on donor store coverage days.",
+          "District Inventory Planner (p1) receives a structured transfer recommendation in the planning dashboard, reviews the donor store options, and approves the optimal transfer with a single confirmation action.",
+          "Store Operations Manager (p2) at the flagship receives an inbound transfer notification with expected arrival window and is prompted to confirm floor space readiness.",
+          "Transfer order is automatically submitted to the logistics coordination system and a confirmation is logged in the inventory audit trail."
+        ]
+      },
+      {
+        "id": "s2",
+        "title": "Early Shrink Pattern Detection from POS Anomalies and Cycle Count Variances",
+        "description": "Over a two-week period, a suburban Acme Apparel store shows a recurring pattern of post-close void transactions on premium outerwear SKUs combined with cycle count shortages in the same category. The AI system correlates these signals, scores the shrink risk, and surfaces a prioritized alert to the regional Loss Prevention Analyst with supporting evidence.",
+        "actors": [
+          "p2",
+          "p3"
+        ],
+        "steps": [
+          "POS Anomaly Detection Agent continuously ingests transaction logs from all 40 stores and flags a cluster of post-close void transactions on outerwear SKUs at store #14, noting that 7 of 9 voids over 14 days were processed by the same employee ID during closing shifts.",
+          "Cycle Count Reconciliation Agent ingests the latest cycle count submission from store #14 and identifies a variance of -11 units across 4 premium outerwear SKUs, which exceeds the store's historical variance baseline by 340%.",
+          "Shrink Risk Scoring Agent correlates the POS void pattern with the cycle count variance, assigns a high-risk shrink score of 87/100 to store #14, and tags the incident with category, SKU list, employee ID pattern, and time-of-day clustering.",
+          "Loss Prevention Analyst (p3) receives a prioritized alert in the LP dashboard with a pre-built evidence summary including transaction logs, cycle count delta report, and a timeline visualization of the anomaly pattern.",
+          "Store Operations Manager (p2) at store #14 receives a separate, role-appropriate notification instructing them to secure the outerwear section and prepare for an unannounced cycle recount, without disclosing the employee-level investigation details.",
+          "Loss Prevention Analyst (p3) reviews the evidence package, escalates to an on-site field investigation, and logs the case in the LP case management system with all AI-generated artifacts attached."
+        ]
+      }
+    ],
+    "agents": [
+      {
+        "id": "a1",
+        "name": "POS Transaction Monitor Agent",
+        "role": "Real-time point-of-sale data ingestion and sell-through threshold alerting",
+        "responsibilities": [
+          "Continuously ingest POS transaction streams from all 40 store locations",
+          "Calculate rolling sell-through velocity per SKU per store using configurable time windows",
+          "Trigger stockout risk alerts when on-hand inventory crosses store-specific reorder thresholds",
+          "Flag post-close, high-value, and sequential void transactions as anomaly candidates"
+        ],
+        "inputs": [
+          "Real-time POS transaction feed (sales, returns, voids) from all 40 stores",
+          "Current on-hand inventory levels from WMS integration",
+          "Store-specific reorder threshold configuration per SKU category",
+          "Store operating hours and shift schedule data"
+        ],
+        "outputs": [
+          "Stockout risk alerts with SKU, store ID, current on-hand, and velocity metrics",
+          "Void transaction anomaly flags with employee ID, time, SKU, and transaction value",
+          "Sell-through velocity reports per SKU per store for downstream agents"
+        ]
+      },
+      {
+        "id": "a2",
+        "name": "Inventory Rebalancing Agent",
+        "role": "Cross-store inventory analysis and inter-store transfer recommendation generation",
+        "responsibilities": [
+          "Query all store locations for available inventory depth on flagged SKUs",
+          "Apply demand forecasting logic to identify true surplus at potential donor stores",
+          "Rank donor store candidates by transfer feasibility, proximity, and coverage impact",
+          "Generate structured transfer recommendations with quantity, donor store, and logistics details"
+        ],
+        "inputs": [
+          "Stockout risk alerts from POS Transaction Monitor Agent",
+          "On-hand inventory levels for all 40 stores from WMS",
+          "14-day demand forecast per SKU per store from planning system",
+          "Store geolocation data and inter-store logistics cost matrix"
+        ],
+        "outputs": [
+          "Ranked donor store candidate list with proposed transfer quantities",
+          "Coverage day impact analysis for both receiving and donor stores",
+          "Draft transfer orders ready for planner approval",
+          "Inventory rebalancing audit log entries"
+        ]
+      },
+      {
+        "id": "a3",
+        "name": "Cycle Count Reconciliation Agent",
+        "role": "Automated cycle count variance detection and baseline deviation scoring",
+        "responsibilities": [
+          "Ingest cycle count submissions from all store locations as they are completed",
+          "Compare counted quantities against system-of-record on-hand balances",
+          "Calculate variance magnitude and compare against each store's historical variance baseline",
+          "Tag high-deviation SKUs and categories for shrink risk correlation"
+        ],
+        "inputs": [
+          "Cycle count submission files from store operations teams",
+          "System-of-record on-hand inventory balances from WMS",
+          "Historical cycle count variance baselines per store and per SKU category",
+          "Store cycle count schedule and completion status"
+        ],
+        "outputs": [
+          "Cycle count variance reports per store with SKU-level detail",
+          "Baseline deviation scores indicating statistical significance of variances",
+          "High-variance SKU and category flags passed to Shrink Risk Scoring Agent",
+          "Cycle count completion and accuracy trend reports for store operations managers"
+        ]
+      },
+      {
+        "id": "a4",
+        "name": "POS Anomaly Detection Agent",
+        "role": "Pattern recognition across POS transaction data to surface potential shrink-related behaviors",
+        "responsibilities": [
+          "Apply rule-based and statistical models to detect anomalous POS transaction patterns",
+          "Identify clustering of voids, refunds, or no-sale events by employee, time, and SKU",
+          "Correlate transaction anomalies across multiple days to distinguish noise from patterns",
+          "Enrich anomaly flags with contextual metadata for downstream investigation"
+        ],
+        "inputs": [
+          "Historical and real-time POS transaction logs including voids, returns, and no-sales",
+          "Employee shift schedule and ID mapping data",
+          "SKU price tier and category data",
+          "Store-level transaction volume baselines for normalization"
+        ],
+        "outputs": [
+          "Anomaly event records with employee ID, transaction type, SKU, time, and store",
+          "Pattern severity scores based on frequency, recency, and value concentration",
+          "Structured anomaly summaries passed to Shrink Risk Scoring Agent",
+          "Raw anomaly logs for LP case management attachment"
+        ]
+      },
+      {
+        "id": "a5",
+        "name": "Shrink Risk Scoring Agent",
+        "role": "Multi-signal shrink risk correlation and prioritized alert generation for loss prevention",
+        "responsibilities": [
+          "Correlate POS anomaly patterns with cycle count variances at the store and SKU level",
+          "Compute a composite shrink risk score using weighted signal inputs",
+          "Classify incidents by likely shrink type (internal theft, external theft, process failure, vendor shortage)",
+          "Generate prioritized, evidence-backed alerts for the Loss Prevention Analyst"
+        ],
+        "inputs": [
+          "Anomaly event records and pattern severity scores from POS Anomaly Detection Agent",
+          "High-variance SKU flags and deviation scores from Cycle Count Reconciliation Agent",
+          "Historical shrink incident outcomes for model calibration",
+          "Store staffing and security configuration metadata"
+        ],
+        "outputs": [
+          "Composite shrink risk scores per store with contributing signal breakdown",
+          "Prioritized LP alert queue with evidence summaries and recommended actions",
+          "Incident classification tags for case management routing",
+          "Trend reports on shrink risk by store cluster, SKU category, and time period"
+        ]
+      },
+      {
+        "id": "a6",
+        "name": "Planner and LP Notification Orchestration Agent",
+        "role": "Role-appropriate alert routing, approval workflow management, and audit trail maintenance",
+        "responsibilities": [
+          "Route inventory transfer recommendations to the correct District Inventory Planner based on store cluster assignment",
+          "Deliver role-scoped shrink alerts to Loss Prevention Analysts and Store Operations Managers without exposing sensitive investigation details to store-level recipients",
+          "Manage approval state for transfer orders and escalate unactioned recommendations after configurable SLA windows",
+          "Maintain a complete audit log of all agent-generated recommendations, approvals, and outcomes"
+        ],
+        "inputs": [
+          "Transfer recommendations from Inventory Rebalancing Agent",
+          "Prioritized LP alerts from Shrink Risk Scoring Agent",
+          "User role and store cluster assignment directory",
+          "Approval decisions and acknowledgment events from dashboard users"
+        ],
+        "outputs": [
+          "Routed notifications delivered to planner and LP dashboards and mobile alerts",
+          "Approved transfer orders submitted to logistics coordination system",
+          "Escalation notices for unactioned recommendations past SLA threshold",
+          "Complete recommendation-to-outcome audit trail for compliance and model feedback"
+        ]
+      }
+    ]
+  }
+}

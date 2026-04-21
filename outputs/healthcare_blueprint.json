@@ -1,0 +1,226 @@
+{
+  "session_id": "9170f940-4036-4250-955c-8c8b56078c76",
+  "blueprint": {
+    "id": "a9036349-4ac6-4938-aca0-76c3d27ca806",
+    "title": "Automated Pre-Authorization and Specialist Referral Orchestration for Multi-Specialty Clinics",
+    "industry": "Healthcare",
+    "status": "draft",
+    "personas": [
+      {
+        "id": "p1",
+        "name": "Prior Authorization Specialist at a 12-physician Multi-Specialty Clinic",
+        "description": "Responsible for assembling and submitting pre-auth packets to commercial and government payers, tracking approval status, and resolving denials across cardiology, orthopedics, and neurology service lines.",
+        "goals": [
+          "Reduce average pre-auth turnaround time from 4 days to under 24 hours",
+          "Eliminate manual copy-paste of clinical notes into payer portals",
+          "Maintain a real-time dashboard of all pending and approved authorizations"
+        ],
+        "pain_points": [
+          "Manually extracting diagnosis codes, procedure codes, and clinical justification from EHR notes takes 45-90 minutes per case",
+          "Payer-specific documentation requirements differ and change frequently, causing rework",
+          "No automated alerts when payer decisions are posted, leading to delayed care scheduling"
+        ]
+      },
+      {
+        "id": "p2",
+        "name": "Referral Coordinator at a Multi-Specialty Ambulatory Practice",
+        "description": "Manages inbound and outbound specialist referrals, confirms insurance eligibility, schedules appointments contingent on authorization approval, and communicates status to referring PCPs and patients.",
+        "goals": [
+          "Schedule specialist appointments within 48 hours of authorization approval",
+          "Reduce patient no-shows caused by authorization confusion",
+          "Provide referring PCPs with real-time referral status updates"
+        ],
+        "pain_points": [
+          "Referrals sit in a shared inbox with no prioritization, causing high-urgency cases to be missed",
+          "Manually calling payers to verify authorization status consumes 2-3 hours per day",
+          "Patients frequently call the front desk asking for status updates that the coordinator cannot quickly retrieve"
+        ]
+      },
+      {
+        "id": "p3",
+        "name": "Orthopedic Surgeon and Department Medical Director at a Multi-Specialty Clinic",
+        "description": "Performs high-volume elective and urgent orthopedic procedures that frequently require pre-authorization. Needs clinical documentation to be accurately represented in auth requests without adding administrative burden to the care team.",
+        "goals": [
+          "Ensure pre-auth submissions accurately reflect clinical necessity documented in visit notes",
+          "Reduce surgery schedule disruptions caused by last-minute authorization denials",
+          "Minimize time spent by clinical staff on administrative authorization tasks"
+        ],
+        "pain_points": [
+          "Auth denials often cite insufficient clinical documentation that was actually present in the EHR but not included in the submission",
+          "Surgery scheduling is blocked when auth status is unknown days before the procedure date",
+          "Clinical staff are pulled away from patient care to answer payer peer-to-peer review calls"
+        ]
+      }
+    ],
+    "scenarios": [
+      {
+        "id": "s1",
+        "title": "End-to-End Pre-Authorization Packet Assembly and Payer Submission for an Elective Orthopedic Procedure",
+        "description": "An orthopedic surgeon orders an elective total knee arthroplasty. The system automatically detects the order, extracts all required clinical evidence from the EHR, assembles a payer-specific pre-auth packet, submits it electronically, and notifies the prior authorization specialist of the outcome.",
+        "actors": [
+          "p1",
+          "p3"
+        ],
+        "steps": [
+          "Orthopedic surgeon finalizes the procedure order for total knee arthroplasty in the EHR, triggering an automated detection event.",
+          "EHR Data Extraction Agent pulls relevant clinical notes, imaging reports, conservative treatment history, ICD-10 and CPT codes, and patient insurance details from the EHR.",
+          "Payer Policy Compliance Agent retrieves the current prior authorization requirements for the identified payer and procedure code combination.",
+          "Pre-Auth Packet Assembly Agent constructs a structured, payer-formatted authorization request with clinical justification narratives mapped to payer medical necessity criteria.",
+          "Payer Submission Agent electronically submits the packet via the payer's API or clearinghouse and logs a submission confirmation number.",
+          "Authorization Status Monitor Agent polls the payer portal for a decision and sends an in-platform alert to the Prior Authorization Specialist when approval or denial is received.",
+          "If denied, the Denial Resolution Agent generates a draft peer-to-peer review request and appeal letter pre-populated with the missing or disputed clinical evidence."
+        ]
+      },
+      {
+        "id": "s2",
+        "title": "Referral Triage, Authorization Linkage, and Specialist Appointment Scheduling",
+        "description": "A PCP submits an urgent cardiology referral for a patient with new-onset chest pain. The system triages the referral by clinical urgency, verifies insurance eligibility, links the referral to an active authorization, and schedules the specialist appointment once authorization is confirmed.",
+        "actors": [
+          "p1",
+          "p2"
+        ],
+        "steps": [
+          "PCP submits a cardiology referral order in the EHR with a clinical reason of new-onset exertional chest pain and abnormal EKG findings.",
+          "Referral Triage Agent classifies the referral as high urgency based on clinical keywords and flags it at the top of the Referral Coordinator's worklist.",
+          "EHR Data Extraction Agent retrieves patient demographics, insurance member ID, and relevant clinical history to support both eligibility verification and pre-auth submission.",
+          "Payer Policy Compliance Agent confirms whether a cardiology consultation for this indication requires prior authorization under the patient's specific plan.",
+          "Pre-Auth Packet Assembly Agent and Payer Submission Agent assemble and submit the authorization request in parallel with the Referral Coordinator identifying available cardiologist appointment slots.",
+          "Authorization Status Monitor Agent detects payer approval and automatically triggers the Referral Coordinator's scheduling workflow with the confirmed authorization number pre-populated.",
+          "Referral Coordinator books the specialist appointment, and the system sends automated status notifications to the referring PCP and the patient via their preferred communication channel."
+        ]
+      }
+    ],
+    "agents": [
+      {
+        "id": "a1",
+        "name": "EHR Clinical Data Extraction Agent",
+        "role": "Extracts and structures relevant clinical data from EHR records to support authorization and referral workflows",
+        "responsibilities": [
+          "Parse physician notes, problem lists, imaging reports, lab results, and medication histories from the EHR",
+          "Identify and map diagnosis codes (ICD-10) and procedure codes (CPT/HCPCS) associated with the order",
+          "Extract conservative treatment history and prior authorization numbers for continuity of care documentation",
+          "Normalize extracted data into a structured clinical summary object for downstream agents"
+        ],
+        "inputs": [
+          "EHR procedure or referral order event",
+          "Patient encounter notes and clinical documentation",
+          "Patient insurance and demographic records"
+        ],
+        "outputs": [
+          "Structured clinical summary with ICD-10 and CPT codes",
+          "Conservative treatment history narrative",
+          "Patient insurance member ID and plan details"
+        ]
+      },
+      {
+        "id": "a2",
+        "name": "Payer Policy Compliance Agent",
+        "role": "Retrieves and interprets current payer-specific prior authorization requirements and medical necessity criteria",
+        "responsibilities": [
+          "Query an up-to-date payer policy database indexed by payer ID, procedure code, and plan type",
+          "Identify required clinical documentation elements for the specific authorization request",
+          "Flag any recent policy changes that differ from the last submission for the same payer-procedure pair",
+          "Return a structured checklist of required documentation fields to the Packet Assembly Agent"
+        ],
+        "inputs": [
+          "Payer ID and plan type from patient insurance record",
+          "CPT and ICD-10 codes from the clinical summary",
+          "Referral urgency classification"
+        ],
+        "outputs": [
+          "Payer-specific documentation requirements checklist",
+          "Medical necessity criteria narrative template",
+          "Authorization requirement flag indicating whether auth is required for this payer-procedure combination"
+        ]
+      },
+      {
+        "id": "a3",
+        "name": "Pre-Authorization Packet Assembly Agent",
+        "role": "Constructs complete, payer-formatted prior authorization request packets from clinical data and policy requirements",
+        "responsibilities": [
+          "Map extracted clinical evidence to payer medical necessity criteria fields",
+          "Generate a clinical justification narrative using structured clinical data and approved language templates",
+          "Populate payer-specific forms or API request schemas with all required fields",
+          "Perform a completeness check against the payer requirements checklist before handoff to the Submission Agent",
+          "Flag any missing documentation gaps back to the Prior Authorization Specialist for manual resolution"
+        ],
+        "inputs": [
+          "Structured clinical summary from EHR Extraction Agent",
+          "Payer documentation requirements checklist from Policy Compliance Agent",
+          "Physician attestation or addendum if requested"
+        ],
+        "outputs": [
+          "Complete payer-formatted prior authorization request packet",
+          "Clinical justification narrative document",
+          "Completeness validation report with any identified gaps"
+        ]
+      },
+      {
+        "id": "a4",
+        "name": "Payer Submission and Tracking Agent",
+        "role": "Submits prior authorization requests to payers via electronic channels and maintains submission audit records",
+        "responsibilities": [
+          "Submit completed auth packets via payer API, clearinghouse EDI transaction, or web portal automation",
+          "Capture and store submission confirmation numbers and timestamps",
+          "Retry failed submissions with exponential backoff and alert the specialist after three consecutive failures",
+          "Maintain a submission audit log linked to the patient encounter and order record in the EHR"
+        ],
+        "inputs": [
+          "Completed pre-authorization packet from Assembly Agent",
+          "Payer API credentials and endpoint configuration",
+          "Submission channel preference by payer"
+        ],
+        "outputs": [
+          "Submission confirmation number and timestamp",
+          "Submission status record written back to EHR and internal dashboard",
+          "Failure alert with error details if submission is unsuccessful"
+        ]
+      },
+      {
+        "id": "a5",
+        "name": "Authorization Status Monitor Agent",
+        "role": "Continuously polls payer systems for authorization decisions and triggers downstream scheduling or denial workflows",
+        "responsibilities": [
+          "Poll payer portals and APIs on a configurable interval for pending authorization decisions",
+          "Parse approval, denial, and pending additional information responses from payer systems",
+          "Push real-time status updates to the Prior Authorization Specialist and Referral Coordinator dashboards",
+          "Trigger the scheduling workflow upon approval or the Denial Resolution Agent upon denial",
+          "Send automated patient and PCP notifications when authorization status changes"
+        ],
+        "inputs": [
+          "Submission confirmation number and payer endpoint from Submission Agent",
+          "Polling interval configuration per payer",
+          "Escalation thresholds for time-sensitive cases"
+        ],
+        "outputs": [
+          "Authorization decision record with approval number or denial reason code",
+          "Real-time dashboard status update",
+          "Automated notification to Referral Coordinator, PCP, and patient"
+        ]
+      },
+      {
+        "id": "a6",
+        "name": "Referral Triage and Denial Resolution Agent",
+        "role": "Prioritizes inbound referrals by clinical urgency and generates appeal documentation for denied authorizations",
+        "responsibilities": [
+          "Analyze referral clinical reason text and diagnosis codes to assign urgency tier using clinical triage logic",
+          "Reorder the Referral Coordinator worklist by urgency tier and estimated authorization lead time",
+          "On denial receipt, identify the specific denial reason code and map it to missing or disputed clinical evidence in the EHR",
+          "Draft a peer-to-peer review request letter and formal appeal with supporting clinical citations",
+          "Route the draft appeal to the ordering physician for review and attestation before resubmission"
+        ],
+        "inputs": [
+          "Referral order with clinical reason and diagnosis codes",
+          "Authorization denial record with reason codes from Status Monitor Agent",
+          "Original clinical summary and pre-auth packet from Assembly Agent"
+        ],
+        "outputs": [
+          "Urgency-tiered referral worklist update",
+          "Draft peer-to-peer review request letter",
+          "Draft authorization appeal with clinical evidence citations",
+          "Physician review task routed to ordering provider"
+        ]
+      }
+    ]
+  }
+}

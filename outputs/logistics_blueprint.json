@@ -1,0 +1,228 @@
+{
+  "session_id": "c363f7de-9536-4b6d-bfe4-de1bf78ada0a",
+  "blueprint": {
+    "id": "65862ca7-406f-4004-b98f-61983dbbc3eb",
+    "title": "Day-of Operations AI: LTL Exception Management, Dock Orchestration, and Driver Check-In Monitoring",
+    "industry": "Freight & Logistics",
+    "status": "draft",
+    "personas": [
+      {
+        "id": "p1",
+        "name": "Load Planning Supervisor at a Regional LTL Carrier",
+        "description": "Oversees daily manifest execution across 12-15 linehaul lanes, responsible for re-routing decisions when weather or road closures disrupt planned routes mid-shift.",
+        "goals": [
+          "Minimize service failures caused by unplanned route deviations",
+          "Reduce manual phone calls to drivers and terminal managers during exceptions",
+          "Maintain on-time delivery percentage above 96% even on disrupted days"
+        ],
+        "pain_points": [
+          "Weather and closure alerts arrive through disparate sources with no unified view",
+          "Re-routing decisions currently require manual cross-referencing of load boards, driver HOS logs, and customer SLAs",
+          "Downstream dock teams are rarely notified of route changes in time to adjust staffing"
+        ]
+      },
+      {
+        "id": "p2",
+        "name": "Dock Operations Manager at a Regional LTL Break-Bulk Terminal",
+        "description": "Manages inbound and outbound trailer flow across 28 dock doors, coordinating lumpers, forklift operators, and yard spotters when trailers arrive outside their scheduled windows.",
+        "goals": [
+          "Keep freight moving through the dock without creating unload backlogs",
+          "Dynamically reassign dock doors and labor when trailers arrive late or early",
+          "Reduce trailer dwell time below 45 minutes per inbound unit"
+        ],
+        "pain_points": [
+          "Off-schedule trailer arrivals cause door conflicts and idle labor",
+          "No real-time visibility into which trailers are 30-60 minutes out versus severely delayed",
+          "Manual whiteboard-based door assignments cannot keep pace with rapid schedule changes"
+        ]
+      },
+      {
+        "id": "p3",
+        "name": "Fleet Safety & Compliance Coordinator at a Regional LTL Carrier",
+        "description": "Monitors driver check-in compliance, missed stop reporting, and hours-of-service adherence across a fleet of 85 local and linehaul drivers.",
+        "goals": [
+          "Detect missed stops within minutes rather than hours to enable same-day recovery",
+          "Ensure drivers complete mandatory check-ins at defined intervals without dispatcher intervention",
+          "Escalate safety-relevant deviations to dispatch before they become service failures"
+        ],
+        "pain_points": [
+          "Missed check-ins are often discovered only when a customer calls to report a missed delivery",
+          "Dispatchers are overwhelmed and cannot proactively monitor all active drivers simultaneously",
+          "No automated differentiation between a driver running late versus a driver who has genuinely missed a stop"
+        ]
+      }
+    ],
+    "scenarios": [
+      {
+        "id": "s1",
+        "title": "Winter Storm Route Exception and Dock Resequencing",
+        "description": "An unexpected ice storm closes I-78 westbound at 06:15, affecting three active linehaul runs and causing four trailers to arrive at the break-bulk terminal between 90 and 150 minutes behind schedule. The Load Planning Supervisor and Dock Operations Manager must collaborate with AI agents to re-route drivers, notify consignees, and resequence dock door assignments before the morning sort window closes.",
+        "actors": [
+          "p1",
+          "p2"
+        ],
+        "steps": [
+          "Route Exception Monitor Agent detects the I-78 closure via ATMS feed at 06:17 and cross-references all active manifests to identify three affected drivers and 47 impacted shipments.",
+          "Dynamic Re-Route Agent calculates alternate paths for each affected driver using current HOS balances, customer delivery windows, and real-time traffic data, then surfaces ranked re-route options to the Load Planning Supervisor in the dispatch console.",
+          "Load Planning Supervisor approves the recommended re-routes with one-click confirmation; agents push updated turn-by-turn instructions to driver ELD units and trigger automated customer delay notifications for affected consignees.",
+          "Dock Orchestration Agent receives revised ETA projections for the four delayed trailers and generates an updated door assignment plan, reallocating two doors from outbound staging to inbound unload and adjusting lumper shift start times by 75 minutes.",
+          "Dock Operations Manager reviews the AI-generated door plan on the terminal dashboard, accepts the resequencing, and the agent broadcasts updated assignments to yard spotters via the yard management system."
+        ]
+      },
+      {
+        "id": "s2",
+        "title": "Missed Stop Detection and Same-Day Recovery Dispatch",
+        "description": "A local P&D driver on a 14-stop city route fails to scan at stop 9 and does not submit the required 11:00 check-in. The Fleet Safety & Compliance Coordinator must identify the deviation, determine whether it is a missed stop or a delay, and coordinate a recovery pickup before the customer's receiving dock closes at 15:00.",
+        "actors": [
+          "p3",
+          "p1"
+        ],
+        "steps": [
+          "Driver Check-In Monitor Agent detects the absence of the 11:00 check-in at 11:04 and immediately queries the ELD for the driver's last known GPS position, engine status, and stop scan history.",
+          "The agent determines the driver's GPS position has not moved for 22 minutes near stop 8 and that stop 9 scan is absent, classifying the event as a probable missed stop rather than a traffic delay, and escalates an alert to the Fleet Safety & Compliance Coordinator.",
+          "Fleet Safety & Compliance Coordinator reviews the AI-generated incident summary including stop 9 consignee details, freight weight, and the 15:00 receiving cutoff, then authorizes the agent to attempt automated driver contact via in-cab messaging.",
+          "Driver responds confirming stop 9 was skipped due to a locked facility; Recovery Dispatch Agent identifies the nearest available driver with remaining HOS capacity and a compatible route segment, and proposes a recovery dispatch plan to the Load Planning Supervisor.",
+          "Load Planning Supervisor approves the recovery assignment; Recovery Dispatch Agent updates both drivers' manifests, notifies the stop 9 consignee of the revised delivery ETA, and logs the exception in the TMS for service failure reporting."
+        ]
+      }
+    ],
+    "agents": [
+      {
+        "id": "a1",
+        "name": "Route Exception Monitor",
+        "role": "Real-time detection of road network disruptions affecting active manifests",
+        "responsibilities": [
+          "Continuously ingest traffic incident feeds, ATMS closure data, and weather alert APIs",
+          "Cross-reference active driver manifests against affected road segments in real time",
+          "Classify exception severity based on number of impacted shipments, customer SLA risk, and estimated delay duration",
+          "Trigger downstream re-route and notification workflows within defined latency thresholds"
+        ],
+        "inputs": [
+          "State DOT ATMS road closure feeds",
+          "National Weather Service precipitation and road condition alerts",
+          "Active manifest and driver assignment data from TMS",
+          "Real-time traffic speed data from HERE or Google Maps Platform"
+        ],
+        "outputs": [
+          "Structured exception event records with affected driver IDs, shipment counts, and estimated delay windows",
+          "Severity-ranked alert payloads routed to dispatch console and downstream agents",
+          "Audit log entries for each detected exception"
+        ]
+      },
+      {
+        "id": "a2",
+        "name": "Dynamic Re-Route Planner",
+        "role": "Generates and ranks alternate routing options for drivers affected by exceptions",
+        "responsibilities": [
+          "Calculate feasible alternate routes for each affected driver using current HOS balance, vehicle weight class, and road restrictions",
+          "Score route options against customer delivery window compliance, fuel cost delta, and driver familiarity",
+          "Push approved route updates to ELD and driver mobile units",
+          "Trigger automated consignee delay notifications for shipments that cannot meet original windows"
+        ],
+        "inputs": [
+          "Exception event records from Route Exception Monitor Agent",
+          "Driver HOS logs from ELD integration",
+          "Customer SLA and delivery window data from TMS",
+          "Mapping and routing engine API with truck-specific restrictions"
+        ],
+        "outputs": [
+          "Ranked re-route option sets presented in dispatch console for supervisor approval",
+          "Approved turn-by-turn route updates transmitted to driver ELD units",
+          "Automated delay notification messages to consignees via email and EDI 214",
+          "Revised ETA projections forwarded to Dock Orchestration Agent"
+        ]
+      },
+      {
+        "id": "a3",
+        "name": "Dock Orchestration Coordinator",
+        "role": "Dynamically resequences dock door assignments and labor allocation based on revised trailer ETAs",
+        "responsibilities": [
+          "Maintain a live model of dock door availability, trailer queue, and labor headcount",
+          "Recalculate door assignments when trailer ETAs shift by more than a configurable threshold",
+          "Adjust lumper and forklift operator schedules to match revised unload sequences",
+          "Broadcast updated assignments to yard management system and terminal staff devices"
+        ],
+        "inputs": [
+          "Revised trailer ETA projections from Dynamic Re-Route Planner Agent",
+          "Current dock door status and trailer queue from yard management system",
+          "Labor schedule and headcount data from workforce management system",
+          "Outbound sort window deadlines from linehaul dispatch plan"
+        ],
+        "outputs": [
+          "Updated dock door assignment plan displayed on terminal operations dashboard",
+          "Labor reallocation instructions pushed to shift supervisor mobile app",
+          "Door assignment updates written to yard management system",
+          "Dwell time projections and backlog risk alerts for Dock Operations Manager"
+        ]
+      },
+      {
+        "id": "a4",
+        "name": "Driver Check-In Monitor",
+        "role": "Detects missed check-ins and classifies stop compliance deviations across the active driver fleet",
+        "responsibilities": [
+          "Monitor scheduled check-in windows for all active drivers and flag non-compliance within minutes of missed deadlines",
+          "Query ELD telemetry to distinguish between traffic delay, vehicle breakdown, and missed stop scenarios",
+          "Classify deviation type and severity using stop scan history, GPS dwell patterns, and route progress",
+          "Escalate confirmed missed stop events to Fleet Safety & Compliance Coordinator with full context"
+        ],
+        "inputs": [
+          "Driver check-in schedule from TMS dispatch plan",
+          "Real-time ELD telemetry including GPS position, engine status, and stop scan events",
+          "Planned stop sequence and geofence boundaries for each active route",
+          "Historical driver check-in compliance data for anomaly baseline"
+        ],
+        "outputs": [
+          "Missed check-in alerts with classification and supporting telemetry evidence",
+          "Incident summary reports delivered to Fleet Safety & Compliance Coordinator console",
+          "Automated in-cab driver contact messages requesting status confirmation",
+          "Escalation records logged in TMS for compliance reporting"
+        ]
+      },
+      {
+        "id": "a5",
+        "name": "Recovery Dispatch Optimizer",
+        "role": "Identifies and assigns the optimal available driver to execute same-day missed stop recoveries",
+        "responsibilities": [
+          "Search active and returning driver pool for candidates with sufficient HOS, geographic proximity, and compatible freight capability",
+          "Score recovery candidates against delivery window feasibility, incremental mileage cost, and customer priority tier",
+          "Generate updated manifests for both the original driver and the recovery driver",
+          "Notify consignees of revised delivery ETAs and coordinate dock appointment adjustments where required"
+        ],
+        "inputs": [
+          "Missed stop incident records from Driver Check-In Monitor Agent",
+          "Active driver HOS balances and current GPS positions from ELD integration",
+          "Consignee receiving hours and dock appointment data from TMS",
+          "Freight characteristics including weight, dimensions, and handling requirements"
+        ],
+        "outputs": [
+          "Ranked recovery driver assignment recommendations presented to Load Planning Supervisor",
+          "Updated manifest files transmitted to assigned recovery driver ELD unit",
+          "Revised ETA notifications sent to affected consignees",
+          "Exception and recovery event records written to TMS for KPI tracking"
+        ]
+      },
+      {
+        "id": "a6",
+        "name": "Operations Intelligence Summarizer",
+        "role": "Aggregates cross-agent event data into shift-level operational summaries and trend alerts for terminal leadership",
+        "responsibilities": [
+          "Compile exception events, re-routes, dock resequencing actions, and missed stop recoveries into a unified shift log",
+          "Calculate real-time impact metrics including service failure risk count, average delay duration, and dock dwell variance",
+          "Surface pattern alerts when exception frequency exceeds historical norms for a given lane, driver, or time window",
+          "Deliver end-of-shift summary reports to terminal manager and regional operations director"
+        ],
+        "inputs": [
+          "Event and output records from all other agents in the pipeline",
+          "TMS historical performance baselines for lanes, drivers, and terminals",
+          "Customer SLA compliance thresholds from contract management system"
+        ],
+        "outputs": [
+          "Live shift operations dashboard with exception counts, recovery status, and dock throughput metrics",
+          "Pattern deviation alerts pushed to terminal manager when thresholds are breached",
+          "End-of-shift PDF and structured data summary reports distributed to regional leadership",
+          "Trend data written to data warehouse for weekly and monthly performance analysis"
+        ]
+      }
+    ]
+  }
+}
